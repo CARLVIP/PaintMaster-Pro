@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaintMaster Pro</title>
+    <!-- FontAwesome & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --border-color: #334155;
+            --gold: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+        }
+
+        body {
+            font-family: 'Poppins', 'Vazirmatn', sans-serif;
+            background: #090d16;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Language RTL Support */
+        body.rtl {
+            dir: rtl;
+            font-family: 'Vazirmatn', 'Poppins', sans-serif;
+        }
+
+        /* Header / Navbar */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge-score {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+
+        select.lang-select {
+            background: var(--bg-primary);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Main Workspace */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Sidebar Toolbar */
+        .toolbar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            overflow-y: auto;
+        }
+
+        body.rtl .toolbar {
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .tool-group {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tool-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .tool-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .tool-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tool-btn:hover, .tool-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        /* Canvas Area */
+        .canvas-container {
+            flex: 1;
+            background: #020617;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: auto;
+        }
+
+        #mainCanvas {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            cursor: crosshair;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal h2 {
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: white;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Gallery / Leaderboard Tables */
+        .grid-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .gallery-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            background: white;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        .gallery-item-actions {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: space-around;
+            padding: 4px;
+        }
+
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table-custom th, .table-custom td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body.rtl .table-custom th, body.rtl .table-custom td {
+            text-align: right;
+        }
+
+        /* Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-palette"></i>
+            <span>PaintMaster</span>
+        </div>
+
+        <div class="user-nav">
+            <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
+                <option value="en" selected>English</option>
+                <option value="fa">فارسی</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+
+            <div class="badge-score">
+                <i class="fa-solid fa-trophy"></i>
+                <span id="userScoreDisplay">0</span> <span data-i18n="pts">Pts</span>
+            </div>
+
+            <button class="btn" onclick="openModal('galleryModal')">
+                <i class="fa-solid fa-images"></i> <span data-i18n="myDrawings">My Gallery</span>
+            </button>
+
+            <button class="btn" onclick="openModal('leaderboardModal')">
+                <i class="fa-solid fa-ranking-star"></i> <span data-i18n="leaderboard">Leaderboard</span>
+            </button>
+
+            <div id="adminBtnContainer" style="display: none;">
+                <button class="btn btn-danger" onclick="openModal('adminModal')">
+                    <i class="fa-solid fa-user-shield"></i> <span data-i18n="adminPanel">Admin</span>
+                </button>
+            </div>
+
+            <div id="authButtons">
+                <button class="btn" onclick="openModal('authModal')">
+                    <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="loginRegister">Login</span>
+                </button>
+            </div>
+
+            <div id="userInfoContainer" style="display: none; align-items: center; gap: 10px;">
+                <span id="usernameDisplay" style="font-weight: 600; color: var(--accent);"></span>
+                <button class="btn btn-danger" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <!-- Sidebar Toolbar -->
+        <div class="toolbar">
+            <div class="tool-group">
+                <label data-i18n="tools">Tools</label>
+                <div class="tool-buttons">
+                    <button class="tool-btn active" id="tool-brush" onclick="setTool('brush')" title="Brush"><i class="fa-solid fa-paint-brush"></i></button>
+                    <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser"><i class="fa-solid fa-eraser"></i></button>
+                    <button class="tool-btn" id="tool-fill" onclick="setTool('fill')" title="Fill Bucket"><i class="fa-solid fa-fill-drip"></i></button>
+                    <button class="tool-btn" id="tool-line" onclick="setTool('line')" title="Line"><i class="fa-solid fa-slash"></i></button>
+                    <button class="tool-btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle"><i class="fa-regular fa-square"></i></button>
+                    <button class="tool-btn" id="tool-circle" onclick="setTool('circle')" title="Circle"><i class="fa-regular fa-circle"></i></button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <label data-i18n="color">Color</label>
+                <input type="color" id="colorPicker" value="#6366f1">
+            </div>
+
+            <div class="tool-group">
+                <label><span data-i18n="size">Size</span>: <span id="sizeDisplay">5</span>px</label>
+                <input type="range" id="sizePicker" min="1" max="50" value="5">
+            </div>
+
+            <div class="tool-group">
+                <button class="btn btn-danger" style="width: 100%; margin-bottom: 8px;" onclick="clearCanvas()">
+                    <i class="fa-solid fa-trash"></i> <span data-i18n="clear">Clear Canvas</span>
+                </button>
+                <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="saveDrawing()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="saveScore">Save & Score</span>
+                </button>
+                <button class="btn" style="width: 100%;" onclick="downloadCanvas()">
+                    <i class="fa-solid fa-download"></i> <span data-i18n="download">Download</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="900" height="600"></canvas>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal">
+            <h2 id="authTitle" data-i18n="login">Login</h2>
+            <form onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label data-i18n="username">Username</label>
+                    <input type="text" id="authUsername" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="password">Password</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <button type="submit" class="btn" style="width:100%" data-i18n="submit">Submit</button>
+            </form>
+            <p style="margin-top: 15px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+                <span id="toggleAuthText" data-i18n="noAccount">Need an account?</span> 
+                <a href="#" onclick="toggleAuthMode()" style="color: var(--accent);" data-i18n="switchAuth">Register</a>
+            </p>
+            <button class="btn btn-danger" style="margin-top: 10px; width:100%" onclick="closeModal('authModal')" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal-overlay" id="leaderboardModal">
+        <div class="modal" style="width: 500px;">
+            <h2 data-i18n="leaderboard">Leaderboard</h2>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="username">Username</th>
+                        <th data-i18n="score">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+            <button class="btn btn-danger" style="margin-top: 20px; width:100%" onclick="closeModal('leaderboardModal')" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal-overlay" id="galleryModal">
+        <div class="modal" style="width: 500px;">
+            <h2 data-i18n="myDrawings">My Drawings</h2>
+            <div id="galleryContainer" class="grid-gallery"></div>
+            <button class="btn btn-danger" style="margin-top: 20px; width:100%" onclick="closeModal('galleryModal')" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <h2 data-i18n="adminPanel">Admin Control Panel</h2>
+            <div class="form-group">
+                <label data-i18n="targetUser">Target Username</label>
+                <input type="text" id="adminTargetUser" placeholder="Username...">
+            </div>
+            <div class="form-group">
+                <label data-i18n="addScoreAmount">Score Amount to Add</label>
+                <input type="number" id="adminScoreAmount" value="100">
+            </div>
+            <button class="btn btn-success" style="width:100%" onclick="adminGrantScore()" data-i18n="grantScore">Grant Points</button>
+            <button class="btn btn-danger" style="margin-top: 10px; width:100%" onclick="closeModal('adminModal')" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <!-- Toasts container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Translations Dictionary
+        const translations = {
+            en: {
+                pts: "Pts", myDrawings: "My Gallery", leaderboard: "Leaderboard", adminPanel: "Admin",
+                loginRegister: "Login / Register", tools: "Tools", color: "Color", size: "Size",
+                clear: "Clear Canvas", saveScore: "Save & Score", download: "Download", login: "Login",
+                register: "Register", username: "Username", password: "Password", submit: "Submit",
+                noAccount: "Need an account?", switchAuth: "Register", close: "Close", score: "Score",
+                targetUser: "Target Username", addScoreAmount: "Points to add", grantScore: "Grant Points",
+                drawSaved: "Drawing saved! You earned points!", cleared: "Canvas cleared!",
+                authSuccess: "Successfully logged in!", adminGranted: "Points granted successfully!"
+            },
+            fa: {
+                pts: "امتیاز", myDrawings: "گالری من", leaderboard: "جدول برترین‌ها", adminPanel: "پنل مدیریت",
+                loginRegister: "ورود / ثبت‌نام", tools: "ابزارها", color: "رنگ", size: "اندازه قلم",
+                clear: "پاک‌کردن بوم", saveScore: "ذخیره و دریافت امتیاز", download: "دانلود نقاشی", login: "ورود",
+                register: "ثبت‌نام", username: "نام کاربری", password: "رمز عبور", submit: "تایید",
+                noAccount: "حساب کاربری ندارید؟", switchAuth: "ثبت‌نام کنید", close: "بستن", score: "امتیاز",
+                targetUser: "نام کاربری کاربر", addScoreAmount: "مقدار امتیاز افزایشی", grantScore: "اعطای امتیاز",
+                drawSaved: "نقاشی ذخیره شد! امتیاز دریافت کردید!", cleared: "بوم پاکسازی شد!",
+                authSuccess: "با موفقیت وارد شدید!", adminGranted: "امتیاز با موفقیت اهدا شد!"
+            },
+            es: {
+                pts: "Pts", myDrawings: "Mi Galería", leaderboard: "Clasificación", adminPanel: "Admin",
+                loginRegister: "Acceder", tools: "Herramientas", color: "Color", size: "Tamaño",
+                clear: "Limpiar", saveScore: "Guardar y Puntuar", download: "Descargar", login: "Acceso",
+                register: "Registro", username: "Usuario", password: "Contraseña", submit: "Enviar",
+                noAccount: "¿Sin cuenta?", switchAuth: "Registrarse", close: "Cerrar", score: "Puntos",
+                targetUser: "Usuario Destino", addScoreAmount: "Puntos a añadir", grantScore: "Otorgar Puntos",
+                drawSaved: "¡Dibujo guardado! Ganaste puntos.", cleared: "¡Lienzo limpiado!",
+                authSuccess: "¡Inicio de sesión con éxito!", adminGranted: "¡Puntos otorgados!"
+            },
+            fr: {
+                pts: "Pts", myDrawings: "Ma Galerie", leaderboard: "Classement", adminPanel: "Admin",
+                loginRegister: "Connexion", tools: "Outils", color: "Couleur", size: "Taille",
+                clear: "Effacer", saveScore: "Sauvegarder", download: "Télécharger", login: "Connexion",
+                register: "Inscription", username: "Nom d'utilisateur", password: "Mot de passe", submit: "Valider",
+                noAccount: "Pas de compte?", switchAuth: "S'inscrire", close: "Fermer", score: "Score",
+                targetUser: "Utilisateur Cible", addScoreAmount: "Points à ajouter", grantScore: "Accorder Points",
+                drawSaved: "Dessin sauvegardé! Points gagnés!", cleared: "Toile effacée!",
+                authSuccess: "Connexion réussie!", adminGranted: "Points accordés avec succès!"
+            },
+            ar: {
+                pts: "نقاط", myDrawings: "معرضي", leaderboard: "لوحة الصدارة", adminPanel: "الإدارة",
+                loginRegister: "تسجيل الدخول", tools: "الأدوات", color: "اللون", size: "الحجم",
+                clear: "مسح اللوحة", saveScore: "حفظ وحسب النقاط", download: "تحميل", login: "دخول",
+                register: "تسجيل", username: "اسم المستخدم", password: "كلمة المرور", submit: "إرسال",
+                noAccount: "ليس لديك حساب؟", switchAuth: "سجل الآن", close: "إغلاق", score: "النقاط",
+                targetUser: "المستخدم المستهدف", addScoreAmount: "النقاط المضافة", grantScore: "منح النقاط",
+                drawSaved: "تم حفظ الرسمة وحصلت على نقاط!", cleared: "تم مسح اللوحة!",
+                authSuccess: "تم تسجيل الدخول بنجاح!", adminGranted: "تم منح النقاط بنجاح!"
+            }
+        };
+
+        let currentLang = 'en';
+
+        // State Management
+        let dbUsers = JSON.parse(localStorage.getItem('pm_users')) || {
+            'admin': { password: 'za123456', score: Infinity, drawings: [] }
+        };
+        let currentUser = null;
+        let isAuthRegisterMode = false;
+
+        // Canvas Setup
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let currentTool = 'brush';
+        let strokeColor = '#6366f1';
+        let strokeSize = 5;
+        let startX, startY, snapshot;
+
+        // Initialize Canvas
+        window.onload = () => {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            updateLeaderboard();
+        };
+
+        // Strict Mouse Control Setup
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', drawing);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+
+        function startDraw(e) {
+            isDrawing = true;
+            startX = e.offsetX;
+            startY = e.offsetY;
+            ctx.beginPath();
+            ctx.lineWidth = strokeSize;
+            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : strokeColor;
+            ctx.fillStyle = strokeColor;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            if (currentTool === 'fill') {
+                floodFill(startX, startY, strokeColor);
+                isDrawing = false;
+            }
+        }
+
+        function drawing(e) {
+            if (!isDrawing) return;
+            ctx.putImageData(snapshot, 0, 0);
+
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+            } else if (currentTool === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+            } else if (currentTool === 'rect') {
+                ctx.strokeRect(e.offsetX, e.offsetY, startX - e.offsetX, startY - e.offsetY);
+            } else if (currentTool === 'circle') {
+                ctx.beginPath();
+                let radius = Math.sqrt(Math.pow((startX - e.offsetX), 2) + Math.pow((startY - e.offsetY), 2));
+                ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        }
+
+        function stopDraw() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        // Flood Fill Algorithm for Bucket Tool
+        function floodFill(startX, startY, fillColorHex) {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            
+            const targetColor = getPixelColor(imgData, startX, startY);
+            const fillColor = hexToRgb(fillColorHex);
+
+            if (colorsMatch(targetColor, fillColor)) return;
+
+            const pixelStack = [[startX, startY]];
+
+            while (pixelStack.length) {
+                const newPos = pixelStack.pop();
+                const x = newPos[0];
+                let y = newPos[1];
+
+                let pixelPos = (y * canvas.width + x) * 4;
+                while (y >= 0 && colorsMatch(getPixelColorAtPos(data, pixelPos), targetColor)) {
+                    y--;
+                    pixelPos -= canvas.width * 4;
+                }
+                pixelPos += canvas.width * 4;
+                y++;
+
+                let reachLeft = false;
+                let reachRight = false;
+
+                while (y < canvas.height && colorsMatch(getPixelColorAtPos(data, pixelPos), targetColor)) {
+                    setPixelColor(data, pixelPos, fillColor);
+
+                    if (x > 0) {
+                        if (colorsMatch(getPixelColorAtPos(data, pixelPos - 4), targetColor)) {
+                            if (!reachLeft) {
+                                pixelStack.push([x - 1, y]);
+                                reachLeft = true;
+                            }
+                        } else if (reachLeft) {
+                            reachLeft = false;
+                        }
+                    }
+
+                    if (x < canvas.width - 1) {
+                        if (colorsMatch(getPixelColorAtPos(data, pixelPos + 4), targetColor)) {
+                            if (!reachRight) {
+                                pixelStack.push([x + 1, y]);
+                                reachRight = true;
+                            }
+                        } else if (reachRight) {
+                            reachRight = false;
+                        }
+                    }
+
+                    y++;
+                    pixelPos += canvas.width * 4;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function getPixelColor(imgData, x, y) {
+            const index = (y * canvas.width + x) * 4;
+            return [imgData.data[index], imgData.data[index + 1], imgData.data[index + 2], imgData.data[index + 3]];
+        }
+
+        function getPixelColorAtPos(data, index) {
+            return [data[index], data[index + 1], data[index + 2], data[index + 3]];
+        }
+
+        function setPixelColor(data, index, color) {
+            data[index] = color.r;
+            data[index + 1] = color.g;
+            data[index + 2] = color.b;
+            data[index + 3] = 255;
+        }
+
+        function colorsMatch(a, b) {
+            return a[0] === (b.r ?? b[0]) && a[1] === (b.g ?? b[1]) && a[2] === (b.b ?? b[2]) && a[3] === (b.a ?? b[3]);
+        }
+
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0};
+        }
+
+        // Tools Controls
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tool-${tool}`).classList.add('active');
+        }
+
+        document.getElementById('colorPicker').addEventListener('change', (e) => strokeColor = e.target.value);
+        document.getElementById('sizePicker').addEventListener('input', (e) => {
+            strokeSize = e.target.value;
+            document.getElementById('sizeDisplay').innerText = strokeSize;
+        });
+
+        function clearCanvas() {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            showToast(translations[currentLang].cleared);
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = `PaintMaster_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Points & Save System
+        function saveDrawing() {
+            if (!currentUser) {
+                openModal('authModal');
+                return;
+            }
+
+            const dataUrl = canvas.toDataURL();
+            dbUsers[currentUser].drawings.push(dataUrl);
+
+            // Calculate Score (Score = 50pts per saved drawing)
+            if (currentUser !== 'admin') {
+                dbUsers[currentUser].score += 50;
+            }
+
+            saveData();
+            updateUI();
+            showToast(translations[currentLang].drawSaved);
+        }
+
+        // Auth Operations
+        function handleAuth(e) {
+            e.preventDefault();
+            const u = document.getElementById('authUsername').value.trim();
+            const p = document.getElementById('authPassword').value.trim();
+
+            if (isAuthRegisterMode) {
+                if (dbUsers[u]) {
+                    alert('Username already exists!');
+                    return;
+                }
+                dbUsers[u] = { password: p, score: 0, drawings: [] };
+                currentUser = u;
+            } else {
+                if (!dbUsers[u] || dbUsers[u].password !== p) {
+                    alert('Invalid username or password!');
+                    return;
+                }
+                currentUser = u;
+            }
+
+            saveData();
+            updateUI();
+            closeModal('authModal');
+            showToast(translations[currentLang].authSuccess);
+        }
+
+        function toggleAuthMode() {
+            isAuthRegisterMode = !isAuthRegisterMode;
+            document.getElementById('authTitle').innerText = isAuthRegisterMode ? translations[currentLang].register : translations[currentLang].login;
+            document.getElementById('toggleAuthText').innerText = isAuthRegisterMode ? 'Already have an account?' : translations[currentLang].noAccount;
+        }
+
+        function logout() {
+            currentUser = null;
+            updateUI();
+        }
+
+        // Admin Functionality
+        function adminGrantScore() {
+            if (currentUser !== 'admin') return;
+            const target = document.getElementById('adminTargetUser').value.trim();
+            const pts = parseInt(document.getElementById('adminScoreAmount').value);
+
+            if (dbUsers[target]) {
+                if (target !== 'admin') {
+                    dbUsers[target].score += pts;
+                    saveData();
+                    updateLeaderboard();
+                    showToast(translations[currentLang].adminGranted);
+                }
+            } else {
+                alert('Target user not found!');
+            }
+        }
+
+        // Local Storage Operations
+        function saveData() {
+            localStorage.setItem('pm_users', JSON.stringify(dbUsers));
+        }
+
+        function updateUI() {
+            if (currentUser) {
+                document.getElementById('authButtons').style.display = 'none';
+                document.getElementById('userInfoContainer').style.display = 'flex';
+                document.getElementById('usernameDisplay').innerText = currentUser;
+                document.getElementById('userScoreDisplay').innerText = currentUser === 'admin' ? '∞' : dbUsers[currentUser].score;
+
+                if (currentUser === 'admin') {
+                    document.getElementById('adminBtnContainer').style.display = 'block';
+                } else {
+                    document.getElementById('adminBtnContainer').style.display = 'none';
+                }
+            } else {
+                document.getElementById('authButtons').style.display = 'block';
+                document.getElementById('userInfoContainer').style.display = 'none';
+                document.getElementById('adminBtnContainer').style.display = 'none';
+                document.getElementById('userScoreDisplay').innerText = '0';
+            }
+            updateGallery();
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            const body = document.getElementById('leaderboardBody');
+            body.innerHTML = '';
+            
+            let sorted = Object.keys(dbUsers)
+                .map(k => ({ username: k, score: dbUsers[k].score }))
+                .sort((a,b) => b.score - a.score);
+
+            sorted.forEach((item, index) => {
+                let row = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${item.username}</td>
+                    <td>${item.score === Infinity ? '∞' : item.score}</td>
+                </tr>`;
+                body.innerHTML += row;
+            });
+        }
+
+        function updateGallery() {
+            const container = document.getElementById('galleryContainer');
+            container.innerHTML = '';
+            if (!currentUser || !dbUsers[currentUser]) return;
+
+            dbUsers[currentUser].drawings.forEach((src, idx) => {
+                let div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.innerHTML = `
+                    <img src="${src}">
+                    <div class="gallery-item-actions">
+                        <a href="${src}" download="drawing_${idx}.png" style="color:white;"><i class="fa-solid fa-download"></i></a>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Multi-Language Support
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.body.classList.toggle('rtl', lang === 'fa' || lang === 'ar');
+            document.body.dir = (lang === 'fa' || lang === 'ar') ? 'rtl' : 'ltr';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+        }
+
+        // Modals Management
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // Notifications
+        function showToast(msg) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
